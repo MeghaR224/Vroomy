@@ -1,0 +1,1020 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vroomy - Smart Roommate Scheduler</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #a8897d 0%, #ac9991 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 400px;
+            margin: 0 auto;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        
+        .container.wide {
+            max-width: 800px;
+        }
+        
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            opacity: 0.9;
+            font-size: 1.1em;
+        }
+        
+        .card {
+            background: #ede1d8;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        
+        .btn {
+            width: 100%;
+            padding: 15px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1em;
+            font-weight: bold;
+            cursor: pointer;
+            margin-bottom: 15px;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(45deg, #e9bfa3, #a8897d);
+            color: white;
+        }
+        
+        .btn-secondary {
+            background: #f0e2b8;
+            color: #333;
+            border: 2px solid #bcb8ad;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        
+        .roommate-list {
+            margin-bottom: 20px;
+        }
+        
+        .roommate {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            background: #f0e2b8;
+            border-radius: 10px;
+            margin-bottom: 10px;
+        }
+        
+        .roommate-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, #e9bfa3, #a8897d);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            margin-right: 15px;
+        }
+        
+        .schedule-item {
+            background: #e3f2fd;
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            border-left: 4px solid #2196f3;
+        }
+        
+        .hidden { display: none; }
+        
+        .back-btn {
+            background: #ac9991;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-bottom: 20px;
+        }
+        
+        input, select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #bcb8ad;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            font-size: 1em;
+            background: white;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #555;
+        }
+        
+        .calendar-container {
+            max-width: 100%;
+            overflow-x: auto;
+            margin-bottom: 20px;
+        }
+        
+        .calendar-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: #ede1d8;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .calendar-table th {
+            background: #f0e2b8;
+            padding: 10px 5px;
+            text-align: center;
+            font-weight: bold;
+            border-bottom: 2px solid #bcb8ad;
+            font-size: 0.9em;
+        }
+        
+        .calendar-table td {
+            padding: 8px 4px;
+            border: 1px solid #bcb8ad;
+            vertical-align: top;
+            height: 40px;
+            position: relative;
+        }
+        
+        .time-label {
+            background: #f0e2b8;
+            font-weight: bold;
+            text-align: center;
+            font-size: 0.8em;
+            width: 60px;
+        }
+        
+        .calendar-event {
+            background: linear-gradient(135deg, #e9bfa3, #a8897d);
+            color: white;
+            padding: 2px 4px;
+            border-radius: 4px;
+            font-size: 0.7em;
+            margin: 1px 0;
+            text-align: center;
+            font-weight: bold;
+        }
+        
+        .calendar-event.roommate-1 {
+            background: linear-gradient(135deg, #e9bfa3, #a8897d);
+        }
+        
+        .calendar-event.roommate-2 {
+            background: linear-gradient(135deg, #ac9991, #b2bfbe);
+        }
+        
+        .calendar-event.roommate-3 {
+            background: linear-gradient(135deg, #f0e2b8, #bcb8ad);
+        }
+        
+        .calendar-event.roommate-4 {
+            background: linear-gradient(135deg, #b2bfbe, #c7c6c5);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Home Screen -->
+        <div id="home-screen">
+            <div class="header">
+                <h1>🏠 Vroomy</h1>
+                <p>Smarter Living. Happier Roommates. Vroomy.</p>
+            </div>
+            
+            <div class="card">
+                <h3 style="margin-bottom: 20px; text-align: center;">Current Roommates</h3>
+                <div class="roommate-list" id="roommate-list">
+                    <div style="text-align: center; color: #666; padding: 20px;">
+                        <p>No roommates added yet</p>
+                        <p style="font-size: 0.9em; margin-top: 5px;">Upload schedules to add roommates</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <button class="btn btn-primary" onclick="showScreen('upload-screen')">
+                    📅 Upload My Schedule
+                </button>
+                <button class="btn btn-primary" onclick="showScreen('bathroom-screen')">
+                    🚿 View Bathroom Schedule
+                </button>
+                <button class="btn btn-primary" onclick="showScreen('shower-screen')">
+                    🛁 Set Shower Preferences
+                </button>
+                <button class="btn btn-primary" onclick="showScreen('booking-screen')">
+                    🔒 Book Private Room Time
+                </button>
+                <button class="btn btn-primary" onclick="showScreen('master-calendar-screen')">
+                    📊 View Master Calendar
+                </button>
+            </div>
+        </div>
+
+        <!-- Upload Schedule Screen -->
+        <div id="upload-screen" class="hidden">
+            <button class="back-btn" onclick="showScreen('home-screen')">← Back</button>
+            
+            <div class="card">
+                <h3 style="margin-bottom: 20px;">📸 Upload Schedule Screenshot</h3>
+                
+                <label>Roommate Name:</label>
+                <input type="text" id="roommate-name" placeholder="Enter roommate name" style="margin-bottom: 20px;">
+                
+                <div style="border: 2px dashed #ccc; padding: 30px; text-align: center; border-radius: 10px; margin-bottom: 20px; background: #f9f9f9;">
+                    <div id="upload-area">
+                        <p style="margin-bottom: 15px; color: #666;">📱 Drop your class schedule screenshot here</p>
+                        <input type="file" id="schedule-image" accept="image/*" style="display: none;" onchange="handleImageUpload(event)">
+                        <button type="button" class="btn btn-secondary" onclick="document.getElementById('schedule-image').click()" style="margin: 0;">
+                            📷 Choose Image
+                        </button>
+                    </div>
+                    <div id="image-preview" class="hidden">
+                        <img id="preview-img" style="max-width: 100%; max-height: 200px; border-radius: 8px; margin-bottom: 15px;">
+                        <p style="color: #28a745; font-weight: bold;">🤖 AI is analyzing your schedule...</p>
+                    </div>
+                </div>
+                
+                <div id="extracted-schedule" class="hidden" style="background: #e8f5e8; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+                    <h4 style="color: #28a745; margin-bottom: 10px;">✅ Schedule Extracted:</h4>
+                    <div id="schedule-results"></div>
+                </div>
+                
+                <button class="btn btn-primary" onclick="uploadSchedule()">
+                    ✅ Save Schedule
+                </button>
+            </div>
+        </div>
+
+        <!-- Bathroom Schedule Screen -->
+        <div id="bathroom-screen" class="hidden">
+            <button class="back-btn" onclick="showScreen('home-screen')">← Back</button>
+            
+            <div class="card">
+                <h3 style="margin-bottom: 20px;">🚿 Weekly Bathroom Schedule</h3>
+                
+                <div class="calendar-container">
+                    <table class="calendar-table" id="bathroom-calendar">
+                        <thead>
+                            <tr>
+                                <th class="time-label">Time</th>
+                                <th>Mon</th>
+                                <th>Tue</th>
+                                <th>Wed</th>
+                                <th>Thu</th>
+                                <th>Fri</th>
+                                <th>Sat</th>
+                                <th>Sun</th>
+                            </tr>
+                        </thead>
+                        <tbody id="calendar-body">
+                            <tr>
+                                <td colspan="8" style="text-align: center; color: #666; padding: 20px;">
+                                    <p>No schedules uploaded yet</p>
+                                    <p style="font-size: 0.9em; margin-top: 5px;">Upload roommate schedules to see bathroom times</p>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <button class="btn btn-secondary" onclick="optimizeSchedule()">
+                    🤖 AI Optimize Schedule
+                </button>
+            </div>
+        </div>
+
+        <!-- Shower Preferences Screen -->
+        <div id="shower-screen" class="hidden">
+            <button class="back-btn" onclick="showScreen('home-screen')">← Back</button>
+            
+            <div class="card">
+                <h3 style="margin-bottom: 20px;">🛁 Set Shower Schedule</h3>
+                
+                <div id="shower-setup" class="hidden">
+                    <p style="text-align: center; color: #666; padding: 20px;">No roommates added yet. Upload schedules first to set shower preferences.</p>
+                </div>
+                
+                <div id="shower-form">
+                    <label>Select Roommate:</label>
+                    <select id="shower-roommate-select">
+                        <option value="">Choose a roommate...</option>
+                    </select>
+                    
+                    <label>Preferred Shower Time:</label>
+                    <select id="shower-time-select">
+                        <option value="6:00 AM">6:00 AM</option>
+                        <option value="6:30 AM">6:30 AM</option>
+                        <option value="7:00 AM">7:00 AM</option>
+                        <option value="7:30 AM">7:30 AM</option>
+                        <option value="8:00 AM">8:00 AM</option>
+                        <option value="8:30 AM">8:30 AM</option>
+                        <option value="9:00 AM">9:00 AM</option>
+                        <option value="6:00 PM">6:00 PM</option>
+                        <option value="6:30 PM">6:30 PM</option>
+                        <option value="7:00 PM">7:00 PM</option>
+                        <option value="7:30 PM">7:30 PM</option>
+                        <option value="8:00 PM">8:00 PM</option>
+                        <option value="8:30 PM">8:30 PM</option>
+                        <option value="9:00 PM">9:00 PM</option>
+                        <option value="9:30 PM">9:30 PM</option>
+                        <option value="10:00 PM">10:00 PM</option>
+                    </select>
+                    
+                    <label>Shower Duration:</label>
+                    <select id="shower-duration-select">
+                        <option value="15">Quick (15 min)</option>
+                        <option value="20">Normal (20 min)</option>
+                        <option value="30">Long (30 min)</option>
+                    </select>
+                    
+                    <button class="btn btn-primary" onclick="addShowerPreference()">
+                        💾 Add Shower Time
+                    </button>
+                </div>
+                
+                <div class="calendar-container">
+                    <table class="calendar-table" id="shower-calendar">
+                        <thead>
+                            <tr>
+                                <th class="time-label">Time</th>
+                                <th>Mon</th>
+                                <th>Tue</th>
+                                <th>Wed</th>
+                                <th>Thu</th>
+                                <th>Fri</th>
+                                <th>Sat</th>
+                                <th>Sun</th>
+                            </tr>
+                        </thead>
+                        <tbody id="shower-calendar-body">
+                            <tr>
+                                <td colspan="8" style="text-align: center; color: #666; padding: 20px;">
+                                    <p>No shower times scheduled yet</p>
+                                    <p style="font-size: 0.9em; margin-top: 5px;">Add roommate preferences to see shower schedule</p>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Room Booking Screen -->
+        <div id="booking-screen" class="hidden">
+            <button class="back-btn" onclick="showScreen('home-screen')">← Back</button>
+            
+            <div class="card">
+                <h3 style="margin-bottom: 20px;">🔒 Book Private Room Time</h3>
+                
+                <div id="booking-setup" class="hidden">
+                    <p style="text-align: center; color: #666; padding: 20px;">No roommates added yet. Upload schedules first to book private time.</p>
+                </div>
+                
+                <div id="booking-form">
+                    <label>Select Roommate:</label>
+                    <select id="booking-roommate-select">
+                        <option value="">Choose a roommate...</option>
+                    </select>
+                    
+                    <label>Reason for Privacy:</label>
+                    <select id="booking-reason-select">
+                        <option>Therapy/Counseling Session</option>
+                        <option>Important Phone Call</option>
+                        <option>Study/Focus Time</option>
+                        <option>Personal Time</option>
+                    </select>
+                    
+                    <label>Preferred Time:</label>
+                    <select id="booking-time-select">
+                        <option value="6:00 AM">6:00 AM</option>
+                        <option value="6:30 AM">6:30 AM</option>
+                        <option value="7:00 AM">7:00 AM</option>
+                        <option value="7:30 AM">7:30 AM</option>
+                        <option value="8:00 AM">8:00 AM</option>
+                        <option value="8:30 AM">8:30 AM</option>
+                        <option value="9:00 AM">9:00 AM</option>
+                        <option value="9:30 AM">9:30 AM</option>
+                        <option value="10:00 AM">10:00 AM</option>
+                        <option value="10:30 AM">10:30 AM</option>
+                        <option value="11:00 AM">11:00 AM</option>
+                        <option value="11:30 AM">11:30 AM</option>
+                        <option value="12:00 PM">12:00 PM</option>
+                        <option value="12:30 PM">12:30 PM</option>
+                        <option value="1:00 PM">1:00 PM</option>
+                        <option value="1:30 PM">1:30 PM</option>
+                        <option value="2:00 PM">2:00 PM</option>
+                        <option value="2:30 PM">2:30 PM</option>
+                        <option value="3:00 PM">3:00 PM</option>
+                        <option value="3:30 PM">3:30 PM</option>
+                        <option value="4:00 PM">4:00 PM</option>
+                        <option value="4:30 PM">4:30 PM</option>
+                        <option value="5:00 PM">5:00 PM</option>
+                        <option value="5:30 PM">5:30 PM</option>
+                        <option value="6:00 PM">6:00 PM</option>
+                        <option value="6:30 PM">6:30 PM</option>
+                        <option value="7:00 PM">7:00 PM</option>
+                        <option value="7:30 PM">7:30 PM</option>
+                        <option value="8:00 PM">8:00 PM</option>
+                        <option value="8:30 PM">8:30 PM</option>
+                        <option value="9:00 PM">9:00 PM</option>
+                        <option value="9:30 PM">9:30 PM</option>
+                        <option value="10:00 PM">10:00 PM</option>
+                    </select>
+                    
+                    <label>Duration:</label>
+                    <select id="booking-duration-select">
+                        <option value="30">30 minutes</option>
+                        <option value="60">1 hour</option>
+                        <option value="90">1.5 hours</option>
+                        <option value="120">2 hours</option>
+                    </select>
+                    
+                    <button class="btn btn-primary" onclick="addPrivateBooking()">
+                        📅 Book Private Time
+                    </button>
+                </div>
+                
+                <div class="calendar-container">
+                    <table class="calendar-table" id="booking-calendar">
+                        <thead>
+                            <tr>
+                                <th class="time-label">Time</th>
+                                <th>Mon</th>
+                                <th>Tue</th>
+                                <th>Wed</th>
+                                <th>Thu</th>
+                                <th>Fri</th>
+                                <th>Sat</th>
+                                <th>Sun</th>
+                            </tr>
+                        </thead>
+                        <tbody id="booking-calendar-body">
+                            <tr>
+                                <td colspan="8" style="text-align: center; color: #666; padding: 20px;">
+                                    <p>No bookings scheduled yet</p>
+                                    <p style="font-size: 0.9em; margin-top: 5px;">Add private time bookings to see complete schedule</p>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Master Calendar Screen -->
+        <div id="master-calendar-screen" class="hidden">
+            <button class="back-btn" onclick="showScreen('home-screen')">← Back</button>
+            
+            <div class="card">
+                <h3 style="margin-bottom: 20px;">📊 Master Calendar - All Activities</h3>
+                
+                <div style="background: #f0e2b8; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+                    <h4 style="margin-bottom: 10px;">📋 Legend:</h4>
+                    <div style="display: flex; flex-wrap: wrap; gap: 15px; font-size: 0.9em;">
+                        <span>🚿 Bathroom Time</span>
+                        <span>🛁 Shower Time</span>
+                        <span>🔒 Private Booking</span>
+                    </div>
+                </div>
+                
+                <div class="calendar-container">
+                    <table class="calendar-table" id="master-calendar">
+                        <thead>
+                            <tr>
+                                <th class="time-label">Time</th>
+                                <th>Mon</th>
+                                <th>Tue</th>
+                                <th>Wed</th>
+                                <th>Thu</th>
+                                <th>Fri</th>
+                                <th>Sat</th>
+                                <th>Sun</th>
+                            </tr>
+                        </thead>
+                        <tbody id="master-calendar-body">
+                            <tr>
+                                <td colspan="8" style="text-align: center; color: #666; padding: 20px;">
+                                    <p>No activities scheduled yet</p>
+                                    <p style="font-size: 0.9em; margin-top: 5px;">Add roommates and schedule activities to see the master calendar</p>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <button class="btn btn-secondary" onclick="generateMasterCalendar()">
+                    🔄 Refresh Calendar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function showScreen(screenId) {
+            // Hide all screens
+            document.querySelectorAll('[id$="-screen"]').forEach(screen => {
+                screen.classList.add('hidden');
+            });
+            
+            // Show selected screen
+            document.getElementById(screenId).classList.remove('hidden');
+            
+            // Make container wider for calendar screens
+            const container = document.querySelector('.container');
+            if (screenId === 'bathroom-screen' || screenId === 'shower-screen' || screenId === 'booking-screen' || screenId === 'master-calendar-screen') {
+                container.classList.add('wide');
+            } else {
+                container.classList.remove('wide');
+            }
+            
+            // Update dropdowns when showing screens
+            if (screenId === 'shower-screen') {
+                updateShowerRoommateDropdown();
+            }
+            if (screenId === 'booking-screen') {
+                updateBookingRoommateDropdown();
+            }
+            if (screenId === 'master-calendar-screen') {
+                generateMasterCalendar();
+            }
+        }
+        
+        function uploadSchedule() {
+            const roommateName = document.getElementById('roommate-name').value.trim();
+            
+            if (!roommateName) {
+                alert('Please enter a roommate name!');
+                return;
+            }
+            
+            // Add roommate to home screen
+            addRoommateToList(roommateName);
+            
+            // Update bathroom schedule
+            updateBathroomSchedule(roommateName);
+            
+            // Reset upload form for next person
+            resetUploadForm();
+            
+            alert(`✅ Schedule uploaded for ${roommateName}! Ready to add another roommate or view bathroom schedule.`);
+        }
+        
+        function resetUploadForm() {
+            // Clear name input
+            document.getElementById('roommate-name').value = '';
+            
+            // Reset upload area
+            document.getElementById('upload-area').classList.remove('hidden');
+            document.getElementById('image-preview').classList.add('hidden');
+            document.getElementById('extracted-schedule').classList.add('hidden');
+            
+            // Reset file input
+            document.getElementById('schedule-image').value = '';
+        }
+        
+        function addRoommateToList(name) {
+            const roommateList = document.getElementById('roommate-list');
+            
+            // Remove 'no roommates' message if it exists
+            const noRoommates = roommateList.querySelector('div[style*="text-align: center"]');
+            if (noRoommates) {
+                noRoommates.remove();
+            }
+            
+            // Create new roommate element
+            const roommateDiv = document.createElement('div');
+            roommateDiv.className = 'roommate';
+            roommateDiv.innerHTML = `
+                <div class="roommate-avatar">${name.charAt(0).toUpperCase()}</div>
+                <div>
+                    <strong>${name}</strong><br>
+                    <small>Schedule uploaded ✅</small>
+                </div>
+            `;
+            
+            roommateList.appendChild(roommateDiv);
+        }
+        
+        let roommateSchedules = [];
+        let showerPreferences = [];
+        let privateBookings = [];
+        
+        function updateBathroomSchedule(newRoommate) {
+            // Add new roommate to schedule list
+            roommateSchedules.push({
+                name: newRoommate,
+                color: `roommate-${roommateSchedules.length + 1}`
+            });
+            
+            // Update all calendars
+            updateAllCalendars();
+        }
+        
+        function generateCalendar() {
+            const calendarBody = document.getElementById('calendar-body');
+            const times = ['7:00 AM', '7:30 AM', '8:00 AM', '8:30 AM', '9:00 AM', '9:30 AM', '10:00 AM'];
+            const dayNames = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+            
+            let calendarHTML = '';
+            
+            times.forEach(time => {
+                calendarHTML += `<tr>`;
+                calendarHTML += `<td class="time-label">${time}</td>`;
+                
+                // Days of week
+                for (let day = 0; day < 7; day++) {
+                    calendarHTML += `<td>`;
+                    
+                    // Smart bathroom scheduling based on individual schedules
+                    roommateSchedules.forEach((roommate, roommateIndex) => {
+                        const dayName = dayNames[day];
+                        const bathroomTime = getSmartBathroomTime(roommate.name, dayName, roommateIndex);
+                        
+                        if (bathroomTime === time) {
+                            calendarHTML += `<div class="calendar-event ${roommate.color}">${roommate.name}</div>`;
+                        }
+                    });
+                    
+                    calendarHTML += `</td>`;
+                }
+                
+                calendarHTML += `</tr>`;
+            });
+            
+            calendarBody.innerHTML = calendarHTML;
+        }
+        
+        function getSmartBathroomTime(roommateName, dayName, roommateIndex) {
+            const times = ['7:00 AM', '7:30 AM', '8:00 AM', '8:30 AM', '9:00 AM', '9:30 AM', '10:00 AM'];
+            
+            // Simulate different schedules for different days
+            const schedulePatterns = {
+                'Monday': [0, 2, 1, 3], // Different starting times for each roommate
+                'Tuesday': [1, 0, 3, 2],
+                'Wednesday': [0, 2, 1, 3],
+                'Thursday': [2, 1, 0, 3],
+                'Friday': [1, 3, 2, 0],
+                'Saturday': [3, 1, 0, 2], // Weekend patterns
+                'Sunday': [2, 0, 3, 1]
+            };
+            
+            const pattern = schedulePatterns[dayName] || [0, 1, 2, 3];
+            const timeIndex = pattern[roommateIndex % pattern.length];
+            
+            // Add some variation based on roommate name for more personalization
+            const nameHash = roommateName.length % 3;
+            const finalIndex = (timeIndex + nameHash) % times.length;
+            
+            return times[finalIndex];
+        }
+        
+        function optimizeSchedule() {
+            alert('🤖 AI has optimized your schedule based on class times and preferences!');
+        }
+        
+        function handleImageUpload(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    // Show image preview
+                    document.getElementById('upload-area').classList.add('hidden');
+                    document.getElementById('image-preview').classList.remove('hidden');
+                    document.getElementById('preview-img').src = e.target.result;
+                    
+                    // Simulate AI processing
+                    setTimeout(() => {
+                        showExtractedSchedule();
+                    }, 2000);
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+        
+        function showExtractedSchedule() {
+            const scheduleResults = document.getElementById('schedule-results');
+            scheduleResults.innerHTML = `
+                <div style="margin-bottom: 10px;">
+                    <strong>Monday:</strong> MATH 101 (9:00-10:30 AM), CHEM 201 (2:00-3:30 PM)
+                </div>
+                <div style="margin-bottom: 10px;">
+                    <strong>Tuesday:</strong> ENG 102 (11:00 AM-12:30 PM)
+                </div>
+                <div style="margin-bottom: 10px;">
+                    <strong>Wednesday:</strong> MATH 101 (9:00-10:30 AM), LAB (3:00-5:00 PM)
+                </div>
+                <div style="margin-bottom: 10px;">
+                    <strong>Thursday:</strong> ENG 102 (11:00 AM-12:30 PM)
+                </div>
+                <div>
+                    <strong>Friday:</strong> CHEM 201 (2:00-3:30 PM)
+                </div>
+            `;
+            document.getElementById('extracted-schedule').classList.remove('hidden');
+        }
+        
+        function updateShowerRoommateDropdown() {
+            const select = document.getElementById('shower-roommate-select');
+            select.innerHTML = '<option value="">Choose a roommate...</option>';
+            
+            roommateSchedules.forEach(roommate => {
+                const option = document.createElement('option');
+                option.value = roommate.name;
+                option.textContent = roommate.name;
+                select.appendChild(option);
+            });
+            
+            // Show/hide form based on whether there are roommates
+            const form = document.getElementById('shower-form');
+            const setup = document.getElementById('shower-setup');
+            if (roommateSchedules.length === 0) {
+                form.classList.add('hidden');
+                setup.classList.remove('hidden');
+            } else {
+                form.classList.remove('hidden');
+                setup.classList.add('hidden');
+            }
+        }
+        
+        function addShowerPreference() {
+            const roommate = document.getElementById('shower-roommate-select').value;
+            const time = document.getElementById('shower-time-select').value;
+            const duration = parseInt(document.getElementById('shower-duration-select').value);
+            
+            if (!roommate) {
+                alert('Please select a roommate!');
+                return;
+            }
+            
+            // Check if this roommate already has a shower time
+            const existingIndex = showerPreferences.findIndex(pref => pref.roommate === roommate);
+            if (existingIndex !== -1) {
+                showerPreferences[existingIndex] = { roommate, time, duration };
+                alert(`Updated shower time for ${roommate}!`);
+            } else {
+                showerPreferences.push({ roommate, time, duration });
+                alert(`Added shower time for ${roommate}!`);
+            }
+            
+            // Update all calendars
+            updateAllCalendars();
+            
+            // Reset form
+            document.getElementById('shower-roommate-select').value = '';
+        }
+        
+        function updateAllCalendars() {
+            generateCalendar();
+            generateShowerCalendar();
+            generateBookingCalendar();
+            generateMasterCalendar();
+        }
+        
+        function generateShowerCalendar() {
+            const calendarBody = document.getElementById('shower-calendar-body');
+            const times = ['6:00 AM', '6:30 AM', '7:00 AM', '7:30 AM', '8:00 AM', '8:30 AM', '9:00 AM', '9:30 AM', '10:00 AM', '6:00 PM', '6:30 PM', '7:00 PM', '7:30 PM', '8:00 PM', '8:30 PM', '9:00 PM', '9:30 PM', '10:00 PM'];
+            
+            let calendarHTML = '';
+            
+            times.forEach(time => {
+                calendarHTML += `<tr>`;
+                calendarHTML += `<td class="time-label">${time}</td>`;
+                
+                // Days of week
+                for (let day = 0; day < 7; day++) {
+                    calendarHTML += `<td>`;
+                    
+                    // First add bathroom slots using smart scheduling
+                    roommateSchedules.forEach((roommate, roommateIndex) => {
+                        const dayNames = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+                        const dayName = dayNames[day];
+                        const bathroomTime = getSmartBathroomTime(roommate.name, dayName, roommateIndex);
+                        
+                        if (bathroomTime === time) {
+                            calendarHTML += `<div class="calendar-event ${roommate.color}" style="opacity: 0.6;">${roommate.name} 🚿</div>`;
+                        }
+                    });
+                    
+                    // Then add shower slots on top
+                    showerPreferences.forEach((pref, index) => {
+                        if (pref.time === time) {
+                            const roommateIndex = roommateSchedules.findIndex(r => r.name === pref.roommate);
+                            const colorClass = roommateIndex >= 0 ? roommateSchedules[roommateIndex].color : 'roommate-1';
+                            calendarHTML += `<div class="calendar-event ${colorClass}">${pref.roommate} 🛁</div>`;
+                        }
+                    });
+                    
+                    calendarHTML += `</td>`;
+                }
+                
+                calendarHTML += `</tr>`;
+            });
+            
+            calendarBody.innerHTML = calendarHTML;
+        }
+        
+        function updateBookingRoommateDropdown() {
+            const select = document.getElementById('booking-roommate-select');
+            select.innerHTML = '<option value="">Choose a roommate...</option>';
+            
+            roommateSchedules.forEach(roommate => {
+                const option = document.createElement('option');
+                option.value = roommate.name;
+                option.textContent = roommate.name;
+                select.appendChild(option);
+            });
+            
+            // Show/hide form based on whether there are roommates
+            const form = document.getElementById('booking-form');
+            const setup = document.getElementById('booking-setup');
+            if (roommateSchedules.length === 0) {
+                form.classList.add('hidden');
+                setup.classList.remove('hidden');
+            } else {
+                form.classList.remove('hidden');
+                setup.classList.add('hidden');
+            }
+        }
+        
+        function addPrivateBooking() {
+            const roommate = document.getElementById('booking-roommate-select').value;
+            const reason = document.getElementById('booking-reason-select').value;
+            const time = document.getElementById('booking-time-select').value;
+            const duration = parseInt(document.getElementById('booking-duration-select').value);
+            
+            if (!roommate) {
+                alert('Please select a roommate!');
+                return;
+            }
+            
+            // Check if this roommate already has a booking at this time
+            const existingIndex = privateBookings.findIndex(booking => booking.roommate === roommate && booking.time === time);
+            if (existingIndex !== -1) {
+                privateBookings[existingIndex] = { roommate, reason, time, duration };
+                alert(`Updated private booking for ${roommate}!`);
+            } else {
+                privateBookings.push({ roommate, reason, time, duration });
+                alert(`Added private booking for ${roommate}!`);
+            }
+            
+            // Update all calendars
+            updateAllCalendars();
+            
+            // Reset form
+            document.getElementById('booking-roommate-select').value = '';
+        }
+        
+        function generateBookingCalendar() {
+            const calendarBody = document.getElementById('booking-calendar-body');
+            const times = ['6:00 AM', '6:30 AM', '7:00 AM', '7:30 AM', '8:00 AM', '8:30 AM', '9:00 AM', '9:30 AM', '10:00 AM', '10:30 AM', '11:00 AM', '11:30 AM', '12:00 PM', '12:30 PM', '1:00 PM', '1:30 PM', '2:00 PM', '2:30 PM', '3:00 PM', '3:30 PM', '4:00 PM', '4:30 PM', '5:00 PM', '5:30 PM', '6:00 PM', '6:30 PM', '7:00 PM', '7:30 PM', '8:00 PM', '8:30 PM', '9:00 PM', '9:30 PM', '10:00 PM'];
+            
+            let calendarHTML = '';
+            
+            times.forEach(time => {
+                calendarHTML += `<tr>`;
+                calendarHTML += `<td class="time-label">${time}</td>`;
+                
+                // Days of week
+                for (let day = 0; day < 7; day++) {
+                    calendarHTML += `<td>`;
+                    
+                    // Add bathroom slots using smart scheduling
+                    roommateSchedules.forEach((roommate, roommateIndex) => {
+                        const dayNames = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+                        const dayName = dayNames[day];
+                        const bathroomTime = getSmartBathroomTime(roommate.name, dayName, roommateIndex);
+                        
+                        if (bathroomTime === time) {
+                            calendarHTML += `<div class="calendar-event ${roommate.color}" style="opacity: 0.4;">${roommate.name} 🚿</div>`;
+                        }
+                    });
+                    
+                    // Then add shower slots (medium transparency)
+                    showerPreferences.forEach((pref, index) => {
+                        if (pref.time === time) {
+                            const roommateIndex = roommateSchedules.findIndex(r => r.name === pref.roommate);
+                            const colorClass = roommateIndex >= 0 ? roommateSchedules[roommateIndex].color : 'roommate-1';
+                            calendarHTML += `<div class="calendar-event ${colorClass}" style="opacity: 0.7;">${pref.roommate} 🛁</div>`;
+                        }
+                    });
+                    
+                    // Finally add private bookings (full opacity)
+                    privateBookings.forEach((booking, index) => {
+                        if (booking.time === time) {
+                            const roommateIndex = roommateSchedules.findIndex(r => r.name === booking.roommate);
+                            const colorClass = roommateIndex >= 0 ? roommateSchedules[roommateIndex].color : 'roommate-1';
+                            calendarHTML += `<div class="calendar-event ${colorClass}">${booking.roommate} 🔒</div>`;
+                        }
+                    });
+                    
+                    calendarHTML += `</td>`;
+                }
+                
+                calendarHTML += `</tr>`;
+            });
+            
+            calendarBody.innerHTML = calendarHTML;
+        }
+        
+        function generateMasterCalendar() {
+            const calendarBody = document.getElementById('master-calendar-body');
+            const times = ['6:00 AM', '6:30 AM', '7:00 AM', '7:30 AM', '8:00 AM', '8:30 AM', '9:00 AM', '9:30 AM', '10:00 AM', '10:30 AM', '11:00 AM', '11:30 AM', '12:00 PM', '12:30 PM', '1:00 PM', '1:30 PM', '2:00 PM', '2:30 PM', '3:00 PM', '3:30 PM', '4:00 PM', '4:30 PM', '5:00 PM', '5:30 PM', '6:00 PM', '6:30 PM', '7:00 PM', '7:30 PM', '8:00 PM', '8:30 PM', '9:00 PM', '9:30 PM', '10:00 PM'];
+            
+            if (roommateSchedules.length === 0) {
+                calendarBody.innerHTML = `
+                    <tr>
+                        <td colspan="8" style="text-align: center; color: #666; padding: 20px;">
+                            <p>No activities scheduled yet</p>
+                            <p style="font-size: 0.9em; margin-top: 5px;">Add roommates and schedule activities to see the master calendar</p>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+            
+            let calendarHTML = '';
+            
+            times.forEach(time => {
+                calendarHTML += `<tr>`;
+                calendarHTML += `<td class="time-label">${time}</td>`;
+                
+                // Days of week
+                for (let day = 0; day < 7; day++) {
+                    calendarHTML += `<td>`;
+                    
+                    // Add bathroom slots using smart scheduling
+                    roommateSchedules.forEach((roommate, roommateIndex) => {
+                        const dayNames = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+                        const dayName = dayNames[day];
+                        const bathroomTime = getSmartBathroomTime(roommate.name, dayName, roommateIndex);
+                        
+                        if (bathroomTime === time) {
+                            calendarHTML += `<div class="calendar-event ${roommate.color}" style="opacity: 0.5;">${roommate.name} 🚿</div>`;
+                        }
+                    });
+                    
+                    // Add shower slots (medium)
+                    showerPreferences.forEach((pref, index) => {
+                        if (pref.time === time) {
+                            const roommateIndex = roommateSchedules.findIndex(r => r.name === pref.roommate);
+                            const colorClass = roommateIndex >= 0 ? roommateSchedules[roommateIndex].color : 'roommate-1';
+                            calendarHTML += `<div class="calendar-event ${colorClass}" style="opacity: 0.8;">${pref.roommate} 🛁</div>`;
+                        }
+                    });
+                    
+                    // Add private bookings (full opacity)
+                    privateBookings.forEach((booking, index) => {
+                        if (booking.time === time) {
+                            const roommateIndex = roommateSchedules.findIndex(r => r.name === booking.roommate);
+                            const colorClass = roommateIndex >= 0 ? roommateSchedules[roommateIndex].color : 'roommate-1';
+                            calendarHTML += `<div class="calendar-event ${colorClass}">${booking.roommate} 🔒</div>`;
+                        }
+                    });
+                    
+                    calendarHTML += `</td>`;
+                }
+                
+                calendarHTML += `</tr>`;
+            });
+            
+            calendarBody.innerHTML = calendarHTML;
+        }
+    </script>
+</body>
+</html>
